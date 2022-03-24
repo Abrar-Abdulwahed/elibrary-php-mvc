@@ -31,61 +31,12 @@ class Users extends Controller {
                 'passwordError' => '',
                 'confirmPasswordError' => ''
             ];
+            require_once 'UserValidator.php';
 
-            $nameValidation = "/^[a-zA-Z0-9]*$/";
-            $passwordValidation = "/^(.{0,7}|[^a-z]*|[^\d]*)$/i";
-
-            //Validate username on letters/numbers
-            if (empty($data['username'])) {
-                $data['usernameError'] = 'Please enter username.';
-            } elseif (!preg_match($nameValidation, $data['username'])) {
-                $data['usernameError'] = 'Name can only contain letters and numbers.';
-            }
-
-            //Validate email
-            if (empty($data['email'])) {
-                $data['emailError'] = 'Please enter email address.';
-            } elseif (!filter_var($data['email'], FILTER_VALIDATE_EMAIL)) {
-                $data['emailError'] = 'Please enter the correct format.';
-            } else {
-                //Check if email exists.
-                if ($this->userModel->findUserByEmail($data['email'])) {
-                $data['emailError'] = 'Email is already taken.';
-                }
-            }
-
-            // Validate password on length, numeric values,
-            if(empty($data['password'])){
-                $data['passwordError'] = 'Please enter password.';
-              } elseif(strlen($data['password']) < 8 && strlen($data['password']) > 20 ){
-                $data['passwordError'] = 'password must between 8 and 20 length';
-              } elseif (preg_match($passwordValidation, $data['password'])) {
-                $data['passwordError'] = 'Password must be have at least one numeric value.';
-              }
-
-            //Validate confirm password
-             if (empty($data['confirmPassword'])) {
-                $data['confirmPasswordError'] = 'Please enter password.';
-            } else {
-                if ($data['password'] != $data['confirmPassword']) {
-                $data['confirmPasswordError'] = 'Passwords do not match, please try again.';
-                }
-            }
-
-            // Make sure that errors are empty
-            if (empty($data['usernameError']) && empty($data['emailError']) && empty($data['passwordError']) && empty($data['confirmPasswordError'])) {
-
-                // Hash password
-                $data['password'] = password_hash($data['password'], PASSWORD_DEFAULT);
-
-                //Register user from model function
-                if ($this->userModel->register($data)) {
-                    //Redirect to the login page
-                    header('location: ' . URLROOT . '/users/login');
-                } else {
-                    die('Something went wrong.');
-                }
-            }
+            $validation = new UserValidator($data);
+            $results = $validation->validateForm();
+            print_r($results);
+            
         }
         $this->view('users/register', $data);
     }
